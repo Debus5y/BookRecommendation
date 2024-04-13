@@ -8,94 +8,136 @@
         body {
             font-family: 'Arial', sans-serif;
             background-image: url('image/background.png');
-            background-size: cover; 
-            background-position: center; 
+            background-size: cover;
+            background-position: center;
             background-attachment: fixed;
             background-color: #e3fae8;
             margin: 0;
             padding: 40px;
             color: #333;
         }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #4CAF50;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        nav div {
+            display: flex;
+            gap: 10px;
+        }
+        .right-corner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            margin: 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #666666;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .book {
+            display: flex; 
+            align-items: center; 
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(255,255,255,0.8); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            border-radius: 5px;
+        }
+
+        .book img {
+            margin-right: 20px;  
+            width: 150px; 
+            height: auto;
+        }
         h1 {
-            background-color: rgba(255, 255, 255);
+            background-color: rgba(255, 255, 255,0);
             padding: 10px;
             border-radius: 5px;
             text-align: center;
         }
-        div {
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            margin: 10px 0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #666666;
-        }
-        div, .book {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: rgba(255,255,255,0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0);
-            border-radius: 5px;
-        }
-        .book img {
-            float: left;
-            margin-right: 10px;
-            height: 100px;
-        }
         .book-title {
-            font-size: 16px;
+            font-size: 20px;
             font-weight: bold;
         }
+
         .book-author {
-            font-size: 14px;
+            font-size: 18px; 
         }
-        .book-details {
-            font-size: 12px;
+
+        .book-details, .book-rating {
+            font-size: 16px;
         }
+
         .book-rating {
-            font-size: 14px;
             color: #008000;
         }
+
         .clear {
             clear: both;
         }
     </style>
 </head>
 <body>
+    <nav>
+        <div>
+            <button id="topRatings">Get Top Ratings</button>
+            <button id="submitRatings">Submit Ratings</button>
+            <button id="checkRating">Check Book Rating</button>
+        </div>
+        <div class="right-corner">
+            <input type="text" id="isbnSearchInput" placeholder="Enter Book Title">
+            <button id="searchISBN">Search ISBN</button>
+        </div>
+    </nav>
+
     <h1>Book Recommendation System</h1>
     
-    <button id="topRatings">Get Top Ratings</button>
     <div id="topRatingsResult"></div>
-    
-    <button id="submitRatings">Submit Ratings</button>
     <div id="ratingsInputFields"></div> <!-- 容器用于插入评分输入框 -->
     <button id="submitAllRatings" style="display: none;">Submit All Ratings</button> <!-- 提交所有评分的按钮 -->
     <div id="ratingsResult"></div>
-
-    <button id="checkRating">Check Book Rating</button>
     <div id="checkRatingResult"></div>
-
-    <button id="searchISBN">Search ISBN</button>
-    <input type="text" id="isbnSearchInput" placeholder="Enter Book Title" style="display:none;">
     <div id="isbnResult"></div>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var ratingsContainer = document.getElementById("ratingsInputFields");
+            var topRatingsResult = document.getElementById("topRatingsResult");
+            var ratingsResult = document.getElementById("ratingsResult");
+            var checkRatingResult = document.getElementById("checkRatingResult");
+            var isbnResult = document.getElementById("isbnResult");
+    
+            function clearAllResults() {
+                topRatingsResult.innerHTML = '';
+                ratingsResult.innerHTML = '';
+                checkRatingResult.innerHTML = '';
+                isbnResult.innerHTML = '';
+            }
+    
             document.getElementById("submitRatings").addEventListener("click", function() {
-                 let newInnerHTML = ''; // 初始化一个空字符串，用于构建HTML
-                for (let i = 0; i < 3; i++) {
+                clearAllResults(); // 清除所有结果
+                let newInnerHTML = ''; 
+                for (let i = 0; i < 5; i++) {
                     newInnerHTML += `
                         <div>
                             <input type="text" id="book_id_${i}" placeholder="Book ID ${i+1}" required>
@@ -103,14 +145,14 @@
                         </div>
                     `;
                 }
-                ratingsContainer.innerHTML = newInnerHTML; // 一次性更新innerHTML
-                document.getElementById("submitAllRatings").style.display = 'block'; // 显示提交所有评分的按钮
+                ratingsContainer.innerHTML = newInnerHTML;
+                document.getElementById("submitAllRatings").style.display = 'block';
             });
-
+    
             document.getElementById("submitAllRatings").addEventListener("click", function() {
                 var userID = prompt("Please enter user ID:", "1");
                 var ratings = [];
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 5; i++) {
                     ratings.push({
                         book_id: document.getElementById(`book_id_${i}`).value,
                         rating: document.getElementById(`rating_${i}`).value
@@ -131,19 +173,18 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById("ratingsResult").innerHTML = "<p>Error submitting ratings.</p>"; // 显示错误信息
+                    ratingsResult.innerHTML = "<p>Error submitting ratings.</p>";
                 });
             });
-
+    
             document.getElementById("topRatings").addEventListener("click", function() {
+                clearAllResults(); // 清除所有结果
                 var userID = prompt("Please enter user ID:", "1");
                 var count = prompt("How many top ratings?", "5");
                 if (userID != null && count != null) {
                     fetch(`/${userID}/ratings/top/${count}`)
                         .then(response => response.json())
                         .then(data => {
-                            var container = document.getElementById("topRatingsResult");
-                            container.innerHTML = '';
                             data.forEach(book => {
                                 var bookDiv = document.createElement('div');
                                 bookDiv.className = 'book';
@@ -157,21 +198,22 @@
                                     </div>
                                     <div class="clear"></div>
                                 `;
-                                container.appendChild(bookDiv);
+                                topRatingsResult.appendChild(bookDiv);
                             });
                         })
                         .catch(error => console.error('Error:', error));
                 }
             });
-
+    
             document.getElementById("checkRating").addEventListener("click", function() {
+                clearAllResults(); // 清除所有结果
                 var userID = prompt("Please enter user ID:", "1");
                 var bookID = prompt("Please enter book ID:");
                 if (userID != null && bookID != null) {
                     fetch(`/${userID}/ratings/${bookID}`)
                         .then(response => response.json())
                         .then(data => {
-                            var book = data[0]; // Assuming the data contains at least one book
+                            var book = data[0];
                             var resultHTML = `
                                 <div class="book">
                                     <img src="${book.URL}" alt="Book cover">
@@ -184,18 +226,20 @@
                                     <div class="clear"></div>
                                 </div>
                             `;
-                            document.getElementById("checkRatingResult").innerHTML = resultHTML;
+                            checkRatingResult.innerHTML = resultHTML;
                         })
                         .catch(error => console.error('Error:', error));
                 }
             });
-
+    
             document.getElementById("searchISBN").addEventListener("click", function() {
+                clearAllResults(); // 清除所有结果
                 document.getElementById("isbnSearchInput").style.display = 'block'; // 显示输入框
             });
 
             document.getElementById("isbnSearchInput").addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
+                    clearAllResults(); // 清除所有结果
                     var bookTitle = document.getElementById("isbnSearchInput").value;
                     fetch(`/api/get_isbn_by_title?title=${encodeURIComponent(bookTitle)}`)
                     .then(response => response.json())
@@ -208,6 +252,7 @@
                     });
                 }
             });
+
         });
     </script>
 </body>
