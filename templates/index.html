@@ -7,30 +7,49 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f4f4f9;
-            margin: 40px;
+            background-image: url('image/background.png');
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
+            background-color: #e3fae8;
+            margin: 0;
+            padding: 40px;
             color: #333;
         }
+
         h1 {
-            color: #5a5a5a;
+            background-color: rgba(255, 255, 255);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
         }
+
+        div {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
         button {
-            background-color: #8c8c8c;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 15px 30px;
             margin: 10px 0;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
         }
+
         button:hover {
             background-color: #666666;
         }
         div, .book {
             margin-top: 20px;
             padding: 15px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: rgba(255,255,255,0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0);
             border-radius: 5px;
         }
         .book img {
@@ -64,6 +83,8 @@
     <div id="topRatingsResult"></div>
     
     <button id="submitRatings">Submit Ratings</button>
+    <div id="ratingsInputFields"></div> <!-- 容器用于插入评分输入框 -->
+    <button id="submitAllRatings">Submit All Ratings</button> <!-- 提交所有评分的按钮 -->
     <div id="ratingsResult"></div>
 
     <button id="checkRating">Check Book Rating</button>
@@ -85,7 +106,7 @@
                                 var bookDiv = document.createElement('div');
                                 bookDiv.className = 'book';
                                 bookDiv.innerHTML = `
-                                    <img src="${book.URL}" alt="Book cover">
+                                    <img src="${book.URL}" a lt="Book cover">
                                     <div>
                                         <div class="book-title">${book.Title}</div>
                                         <div class="book-author">Author: ${book.Author}</div>
@@ -101,35 +122,42 @@
                 }
             });
 
-            // Event listener for submitting ratings
+            var ratingsContainer = document.getElementById("ratingsInputFields");
             document.getElementById("submitRatings").addEventListener("click", function() {
-                var userID = prompt("Please enter user ID:", "1");
-                var ratings = prompt("Enter ratings as 'book_id,rating' on new lines:");
-                if (userID != null && ratings != null) {
-                    var formattedRatings = ratings.split("\n").map(function(item) {
-                        var parts = item.split(",");
-                        return {
-                            book_id: parts[0].trim(),
-                            rating: parseFloat(parts[1].trim())
-                        };
-                    });
-
-                    fetch(`/${userID}/ratings`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ratings: formattedRatings})
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("ratingsResult").innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
-                    })
-                    .catch(error => console.error('Error:', error));
+                let newInnerHTML = ''; // 初始化一个空字符串，用于构建HTML
+                for (let i = 0; i < 3; i++) {
+                    newInnerHTML += `
+                        <div>
+                            <input type="text" id="book_id_${i}" placeholder="Book ID ${i+1}" required>
+                            <input type="number" id="rating_${i}" placeholder="Rating ${i+1}" min="1" max="5" required>
+                        </div>
+                    `;
                 }
+                ratingsContainer.innerHTML = newInnerHTML; // 一次性更新innerHTML
+                document.getElementById("submitAllRatings").style.display = 'block'; // 显示提交所有评分的按钮
             });
 
-            // Event listener for checking a user's rating for a specific book
+            document.getElementById("submitAllRatings").addEventListener("click", function() {
+                var userID = prompt("Please enter user ID:", "1");
+                var ratings = [];
+                for (let i = 0; i < 3; i++) {
+                    ratings.push({
+                        book_id: document.getElementById(`book_id_${i}`).value,
+                        rating: document.getElementById(`rating_${i}`).value
+                    });
+                }
+                fetch(`/${userID}/ratings`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ratings: ratings})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("ratingsResult").innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+                })
+                .catch(error => console.error('Error:', error));
+            });
+            
             document.getElementById("checkRating").addEventListener("click", function() {
                 var userID = prompt("Please enter user ID:", "1");
                 var bookID = prompt("Please enter book ID:");
@@ -155,7 +183,6 @@
                         .catch(error => console.error('Error:', error));
                 }
             });
-
         });
     </script>
 </body>
