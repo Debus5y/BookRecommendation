@@ -32,6 +32,20 @@ def add_ratings(user_id):
     recommendation_engine.add_ratings(ratings)
 
     return json.dumps(ratings_list)  # 返回接收到的数据以供确认
+
+@main.route("/api/get_isbn_by_title", methods=["GET"])
+def get_isbn_by_title():
+    book_title = request.args.get('title', default='', type=str)
+    if book_title:
+        logger.info("API call to search ISBN for book title: %s", book_title)
+        isbn_data = recommendation_engine.get_isbn_by_title(book_title)
+        if isbn_data:
+            return json.dumps(isbn_data)
+        else:
+            return json.dumps({'error': 'ISBN not found for the specified title'}), 404
+    else:
+        return json.dumps({'error': 'No title provided'}), 400
+
 @main.route("/")
 def index():
     # 渲染templates/index.html模板

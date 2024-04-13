@@ -18,6 +18,44 @@ class RecommendationEngine:
     """A book recommendation engine
     """
 
+    def __init__(self, sc, dataset_path):
+        """Init the recommendation engine given a Spark context and a dataset path
+        """
+
+        logger.info("Starting up the Recommendation Engine: ")
+
+        self.sc = sc
+        self.dataset_path = dataset_path
+        self.__load_data()
+
+
+        # Load ratings data for later use
+        logger.info("Loading Ratings data...")
+        ratings_file_path = os.path.join(dataset_path, 'BX-Book-Ratings.csv')
+        ratings_raw_RDD = self.sc.textFile(ratings_file_path)
+        ratings_raw_data_header = ratings_raw_RDD.take(1)[0]
+        self.ratings_RDD = ratings_raw_RDD.filter(lambda line: line!=ratings_raw_data_header)\
+            .map(lambda line: line.split(";"))\
+            .map(lambda tokens: (int(tokens[0][1:-1]), abs(hash(tokens[1][1:-1])) % (10 ** 8), int(tokens[2][1:-1]))).cache()
+        # Load books data for later use
+        logger.info("Loading Books data...")
+        books_file_path = os.path.join(dataset_path, 'BX-Books.csv')
+        books_raw_RDD = self.sc.textFile(books_file_path)
+        books_raw_data_header = books_raw_RDD.take(1)[0]
+        self.books_RDD = books_raw_RDD.filter(lambda line: line!=books_raw_data_header)\
+            .map(lambda line: line.split(";"))\
+            .map(lambda tokens: (abs(hash(tokens[0][1:-1])) % (10 ** 8), tokens[1][1:-1], tokens[2][1:-1], tokens[3][1:-1], tokens[4][1:-1], tokens[5][1:-1])).cache()
+        self.books_titles_RDD = self.books_RDD.map(lambda x: (int(x[0]), x[1], x[2], x[3], x[4], x[5])).cache()
+        # Pre-calculate books ratings counts
+        self.__count_and_average_ratings()
+
+        # Train the model
+        self.rank = 16
+        self.seed = 5
+        self.iterations = 10
+        self.regularization_parameter = 0.1
+        self.__train_model() 
+
     def __count_and_average_ratings(self):
         """Updates the books ratings counts from 
         the current data self.ratings_RDD
@@ -88,38 +126,21 @@ class RecommendationEngine:
         ratings = self.__predict_ratings(user_unrated_books_RDD).filter(lambda r: r[2]>=25).takeOrdered(books_count, key=lambda x: -x[1])
 
         return self.__list_to_json(ratings)
-
-    def __init__(self, sc, dataset_path):
-        """Init the recommendation engine given a Spark context and a dataset path
-        """
-
-        logger.info("Starting up the Recommendation Engine: ")
-
-        self.sc = sc
-
-        # Load ratings data for later use
-        logger.info("Loading Ratings data...")
-        ratings_file_path = os.path.join(dataset_path, 'BX-Book-Ratings.csv')
-        ratings_raw_RDD = self.sc.textFile(ratings_file_path)
-        ratings_raw_data_header = ratings_raw_RDD.take(1)[0]
-        self.ratings_RDD = ratings_raw_RDD.filter(lambda line: line!=ratings_raw_data_header)\
-            .map(lambda line: line.split(";"))\
-            .map(lambda tokens: (int(tokens[0][1:-1]), abs(hash(tokens[1][1:-1])) % (10 ** 8), int(tokens[2][1:-1]))).cache()
-        # Load books data for later use
+    
+    def __load_data(self):
         logger.info("Loading Books data...")
-        books_file_path = os.path.join(dataset_path, 'BX-Books.csv')
+        books_file_path = os.path.join(self.dataset_path, 'BX-Books.csv')
         books_raw_RDD = self.sc.textFile(books_file_path)
         books_raw_data_header = books_raw_RDD.take(1)[0]
-        self.books_RDD = books_raw_RDD.filter(lambda line: line!=books_raw_data_header)\
-            .map(lambda line: line.split(";"))\
-            .map(lambda tokens: (abs(hash(tokens[0][1:-1])) % (10 ** 8), tokens[1][1:-1], tokens[2][1:-1], tokens[3][1:-1], tokens[4][1:-1], tokens[5][1:-1])).cache()
-        self.books_titles_RDD = self.books_RDD.map(lambda x: (int(x[0]), x[1], x[2], x[3], x[4], x[5])).cache()
-        # Pre-calculate books ratings counts
-        self.__count_and_average_ratings()
+        self.books_RDD = books_raw_RDD.filter(lambda line: line != books_raw_data_header)\
+            .map(lambda line: line.split('";"'))\
+            .map(lambda tokens: (tokens[0].strip('"'), tokens[1], tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7].strip('"'))).cache()
 
-        # Train the model
-        self.rank = 16
-        self.seed = 5
-        self.iterations = 10
-        self.regularization_parameter = 0.1
-        self.__train_model() 
+        self.books_titles_RDD = self.books_RDD.map(lambda x: (x[1].strip().lower(), x[0]))  # Map titles to ISBNs for easy lookup
+
+
+    def get_isbn_by_title(self, book_title):
+        logger.info("Searching ISBN for title: %s", book_title)
+        matched_books = self.books_titles_RDD.filter(lambda book: book[1].lower() == book_title.lower()).collect()
+        # return matched_books[0][1] if matched_books else None
+        return {'isbn': matched_books[0][0]} if matched_books else {}
