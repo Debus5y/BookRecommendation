@@ -137,21 +137,20 @@
                     fetch(`/${userID}/ratings/${bookID}`)
                         .then(response => response.json())
                         .then(data => {
-                            var container = document.getElementById("checkRatingResult");
-                            container.innerHTML = ''; // 清空之前的内容
-                            var bookDiv = document.createElement('div');
-                            bookDiv.className = 'book';
-                            bookDiv.innerHTML = `
-                                <img src="${data.URL}" alt="Book cover">
-                                <div>
-                                    <div class="book-title">${data.Title}</div>
-                                    <div class="book-author">Author: ${data.Author}</div>
-                                    <div class="book-details">Year: ${data.Year} | Publisher: ${data.Publisher}</div>
-                                    <div class="book-rating">Rating: ${data.Rating.toFixed(2)} (${data.Count} ratings)</div>
+                            var book = data[0]; // Assuming the data contains at least one book
+                            var resultHTML = `
+                                <div class="book">
+                                    <img src="${book.URL}" alt="Book cover">
+                                    <div>
+                                        <div class="book-title">${book.Title}</div>
+                                        <div class="book-author">Author: ${book.Author}</div>
+                                        <div class="book-details">Year: ${book.Year} | Publisher: ${book.Publisher}</div>
+                                        <div class="book-rating">Rating: ${book.Rating.toFixed(2)} (${book.Count} ratings)</div>
+                                    </div>
+                                    <div class="clear"></div>
                                 </div>
-                                <div class="clear"></div>
                             `;
-                            container.appendChild(bookDiv);
+                            document.getElementById("checkRatingResult").innerHTML = resultHTML;
                         })
                         .catch(error => console.error('Error:', error));
                 }
