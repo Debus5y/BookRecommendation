@@ -36,7 +36,11 @@ def add_ratings(user_id):
 def index():
     # 渲染templates/index.html模板
     return render_template("index.html")
- 
+
+@main.route("/recommendation")
+def recommendation():
+    # 渲染templates/book_recommendation.html模板
+    return render_template("book_recommendation.html")
  
 def create_app(spark_context, dataset_path):
     global recommendation_engine 
