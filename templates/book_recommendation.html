@@ -126,12 +126,15 @@
             var ratingsResult = document.getElementById("ratingsResult");
             var checkRatingResult = document.getElementById("checkRatingResult");
             var isbnResult = document.getElementById("isbnResult");
+            var submitAllRatingsButton = document.getElementById("submitAllRatings");
     
             function clearAllResults() {
                 topRatingsResult.innerHTML = '';
                 ratingsResult.innerHTML = '';
                 checkRatingResult.innerHTML = '';
                 isbnResult.innerHTML = '';
+                ratingsContainer.innerHTML = '';
+                submitAllRatingsButton.style.display = 'none';
             }
     
             document.getElementById("submitRatings").addEventListener("click", function() {
@@ -146,10 +149,11 @@
                     `;
                 }
                 ratingsContainer.innerHTML = newInnerHTML;
-                document.getElementById("submitAllRatings").style.display = 'block';
+                submitAllRatingsButton.style.display = 'block';
             });
     
             document.getElementById("submitAllRatings").addEventListener("click", function() {
+                clearAllResults(); // 清除所有结果
                 var userID = prompt("Please enter user ID:", "1");
                 var ratings = [];
                 for (let i = 0; i < 5; i++) {
@@ -168,8 +172,8 @@
                     var resultContainer = document.getElementById("ratingsResult");
                     let formattedOutput = data.map(book => `Book ID: ${book.book_id}, Rating: ${book.rating}`).join("\n");
                     resultContainer.innerHTML = `<pre>${formattedOutput}</pre>`;
-                    resultContainer.innerHTML += `<p>User ID: ${userID}</p>`; // 显示用户ID
-                    resultContainer.innerHTML += "<p>Rating submitted.</p>"; // 显示“评分已提交”的消息
+                    resultContainer.innerHTML += `<p>User ID: ${userID}</p>`;
+                    resultContainer.innerHTML += "<p>Rating submitted.</p>";
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -177,6 +181,7 @@
                 });
             });
     
+            // 在其他按钮的事件处理器中同样调用 clearAllResults 函数
             document.getElementById("topRatings").addEventListener("click", function() {
                 clearAllResults(); // 清除所有结果
                 var userID = prompt("Please enter user ID:", "1");
@@ -234,25 +239,8 @@
     
             document.getElementById("searchISBN").addEventListener("click", function() {
                 clearAllResults(); // 清除所有结果
-                document.getElementById("isbnSearchInput").style.display = 'block'; // 显示输入框
+                document.getElementById("isbnSearchInput").style.display = 'block';
             });
-
-            document.getElementById("isbnSearchInput").addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    clearAllResults(); // 清除所有结果
-                    var bookTitle = document.getElementById("isbnSearchInput").value;
-                    fetch(`/api/get_isbn_by_title?title=${encodeURIComponent(bookTitle)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("isbnResult").innerHTML = `ISBN for "${bookTitle}": ${data.isbn}`;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        document.getElementById("isbnResult").innerHTML = "ISBN not found.";
-                    });
-                }
-            });
-
         });
     </script>
 </body>
