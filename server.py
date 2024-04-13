@@ -36,7 +36,15 @@ def run_server(app):
 if __name__ == "__main__":
     # Init spark context and load libraries
     sc = init_spark_context()
-    dataset_path = os.path.join('datasets', 'BX-CSV-Dump')
+    # dataset_path = os.path.join('datasets', 'BX-CSV-Dump')
+    hdfs_host = 'localhost'
+    hdfs_port = '9000'
+
+    # HDFS中的数据路径
+    hdfs_path = '/user/user/datasets/BX-CSV-Dump'
+
+    # 完整的HDFS路径
+    dataset_path = f'hdfs://{hdfs_host}:{hdfs_port}{hdfs_path}'
     app = create_app(sc, dataset_path)
  
     # start web server

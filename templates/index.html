@@ -137,11 +137,26 @@
                     fetch(`/${userID}/ratings/${bookID}`)
                         .then(response => response.json())
                         .then(data => {
-                            document.getElementById("checkRatingResult").innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+                            var container = document.getElementById("checkRatingResult");
+                            container.innerHTML = ''; // 清空之前的内容
+                            var bookDiv = document.createElement('div');
+                            bookDiv.className = 'book';
+                            bookDiv.innerHTML = `
+                                <img src="${data.URL}" alt="Book cover">
+                                <div>
+                                    <div class="book-title">${data.Title}</div>
+                                    <div class="book-author">Author: ${data.Author}</div>
+                                    <div class="book-details">Year: ${data.Year} | Publisher: ${data.Publisher}</div>
+                                    <div class="book-rating">Rating: ${data.Rating.toFixed(2)} (${data.Count} ratings)</div>
+                                </div>
+                                <div class="clear"></div>
+                            `;
+                            container.appendChild(bookDiv);
                         })
                         .catch(error => console.error('Error:', error));
                 }
             });
+
         });
     </script>
 </body>
